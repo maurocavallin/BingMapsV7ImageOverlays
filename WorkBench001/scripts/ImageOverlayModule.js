@@ -76,37 +76,65 @@ var ImageOverlay;
             var pushpinOptions = {
                 width: null,
                 height: null,
-                anchor: new Microsoft.Maps.Point(size.width/2, size.height/2),
-                htmlContent: "<img id='" + _id + "' style='width:" + size.width + "px;height:" + size.height + "px;opacity:" + _opacity + ";filter:alpha(opacity=" + (_opacity * 100) + ");' src='" + imageURL + "'/>"
+                anchor: new Microsoft.Maps.Point(size.anchorPointX, size.anchorPointY),
+                htmlContent: "<div style='margin-left:" + size.offSetX + "px;margin-top:" + size.offSetY + "px;'>" + 
+							 "<img id='" + _id + "' style='width:" + size.width + "px;height:" + size.height + "px;opacity:" + _opacity + ";filter:alpha(opacity=" + (_opacity * 100) + ");' src='" + imageURL + "'/>" + 
+							 "</div>"
             };
 
             _basePushpin.setOptions(pushpinOptions);
         }
 
         function calculateSize(){
-            var nwPixel = map.tryLocationToPixel(boundingBox.getNorthwest());
-            var sePixel = map.tryLocationToPixel(boundingBox.getSoutheast());
+            var nwOverlayPixel = map.tryLocationToPixel(boundingBox.getNorthwest());
+            var seOverlayPixel = map.tryLocationToPixel(boundingBox.getSoutheast());
+			
+			var mapLocationRect = map.getBounds(); 
+			var nwMapPixel = map.tryLocationToPixel(mapLocationRect.getNorthwest());
+            var seMapPixel = map.tryLocationToPixel(mapLocationRect.getSoutheast());
 
-            var width = Math.abs(sePixel.x - nwPixel.x);
-            var height = Math.abs(nwPixel.y - sePixel.y);
+            var width = Math.abs(seOverlayPixel.x - nwOverlayPixel.x);
+            var height = Math.abs(nwOverlayPixel.y - seOverlayPixel.y);
+			
+			var anchorPointX = width / 2;
+			var anchorPointY = height / 2;
+			var offSetX = 0;
+			var offSetY = 0;
+			
+			if (!mapLocationRect.contains(boundingBox.getNorthwest()) || !mapLocationRect.contains(boundingBox.getSoutheast()))
+			{
+			   anchorPointX
+			   anchorPointY
+			}
 
             return {
                 width: width,
-                height: height
+                height: height,
+				anchorPointX: anchorPointX,
+				anchorPointY: anchorPointY,
+				offSetX: offSetX,
+				offSetY: offSetY 
             };
         }
 
         _basePushpin.Refresh = function () {
             var size = calculateSize();
 
-            _basePushpin.setOptions({anchor : new Microsoft.Maps.Point(size.width/2, size.height/2)});
+            _basePushpin.setOptions({anchor : new Microsoft.Maps.Point(size.anchorPointX, size.anchorPointY)});
 
             var elm = document.getElementById(_id);
 
-            if(elm){
+            if(elm){ // IMG elem
                 elm.style.width = size.width + 'px';
-                elm.style.height = size.height + 'px';            
+                elm.style.height = size.height + 'px';   
+
+				if (elm.parentNode) { // DIV elem
+					elm.parentNode.style.marginLeft = size.offSetX + 'px';
+					elm.parentNode.style.marginTop = size.offSetY + 'px'; 
+				}				
             }
+			
+			
         };
 
         _basePushpin.SetOpacity = function (opacity) {

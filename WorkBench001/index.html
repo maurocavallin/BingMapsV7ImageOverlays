@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script type="text/javascript" src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script>
+
+    <script type="text/javascript">
+        var map;
+
+        function GetMap() {
+            // Initialize the map
+            map = new Microsoft.Maps.Map(document.getElementById("myMap"),
+            {
+                credentials: "AvwBNO-3WsgtH5fv2YfiPVGwuEnLj9zuHgtjuuI-xFVuSiTkQixPtuBNRQPoo5ng",
+				showMapTypeSelector:false, // nasconde il selettore tipo mappa
+                center: new Microsoft.Maps.Location(40.25, -123.25),
+                zoom: 7,
+				//mapTypeId: Microsoft.Maps.MapTypeId.mercator //nasconde il tile microsoft di default
+            });
+
+            //Register and load the Image Overlay Module
+            Microsoft.Maps.registerModule("ImageOverlayModule", "scripts/ImageOverlayModule.js");
+            Microsoft.Maps.loadModule("ImageOverlayModule", { callback: function () {
+			    var loc1 = new Microsoft.Maps.Location(40.4, -123.5);
+				var loc2 = new Microsoft.Maps.Location(40, -122.8);
+                var imageRect = Microsoft.Maps.LocationRect.fromCorners(loc1, loc2);
+                var imgPin = ImageOverlay(map, 'images/topographicMap.jpg', imageRect);
+                imgPin.SetOpacity(0.5);
+                map.entities.push(imgPin);
+				
+				var bestview = Microsoft.Maps.LocationRect.fromLocations(loc1,loc2);
+				map.setView({bounds:bestview });
+				
+				var pushpinOptions = {draggable:true, zIndex:100}; 
+				var pushpin= new Microsoft.Maps.Pushpin(map.getCenter(), pushpinOptions); 
+				
+				map.entities.push(pushpin);
+	        } 
+	        });
+        }
+    </script>
+</head>
+<body onload="GetMap();">
+    <div id='myMap' style="position:relative;width:800px;height:600px;"></div>
+</body>
+</html>

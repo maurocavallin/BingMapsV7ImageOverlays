@@ -77,34 +77,44 @@ var ImageOverlay;
                 width: null,
                 height: null,
                 anchor: new Microsoft.Maps.Point(size.anchorPointX, size.anchorPointY),
-                htmlContent: "<div style='margin-left:" + size.offSetX + "px;margin-top:" + size.offSetY + "px;'>" + 
-							 "<img id='" + _id + "' style='width:" + size.width + "px;height:" + size.height + "px;opacity:" + _opacity + ";filter:alpha(opacity=" + (_opacity * 100) + ");' src='" + imageURL + "'/>" + 
-							 "</div>"
+                htmlContent: "<img id='" + _id + "' style='width:" + size.width + "px;height:" + size.height + "px;opacity:" + _opacity + ";filter:alpha(opacity=" + (_opacity * 			 100) + ");' src='" + imageURL + "'/>"
             };
 
             _basePushpin.setOptions(pushpinOptions);
+			_basePushpin.setLocation(size.pushpinLocation);
         }
 
         function calculateSize(){
+		
             var nwOverlayPixel = map.tryLocationToPixel(boundingBox.getNorthwest());
             var seOverlayPixel = map.tryLocationToPixel(boundingBox.getSoutheast());
-			
-			var mapLocationRect = map.getBounds(); 
-			var nwMapPixel = map.tryLocationToPixel(mapLocationRect.getNorthwest());
-            var seMapPixel = map.tryLocationToPixel(mapLocationRect.getSoutheast());
-
+		
             var width = Math.abs(seOverlayPixel.x - nwOverlayPixel.x);
             var height = Math.abs(nwOverlayPixel.y - seOverlayPixel.y);
 			
 			var anchorPointX = width / 2;
 			var anchorPointY = height / 2;
-			var offSetX = 0;
-			var offSetY = 0;
 			
-			if (!mapLocationRect.contains(boundingBox.getNorthwest()) || !mapLocationRect.contains(boundingBox.getSoutheast()))
+			var pushpinLocation = boundingBox.center;
+
+            // avoid automatic hiding of pushpin overlay when we zoom to much,
+			// occurs only when overlay image is partially out of the map viewport
+		
+			var mapBoundsRect = map.getBounds(); 
+			
+			if (mapBoundsRect.intersects(boundingBox) &&
+				(!mapBoundsRect.contains(boundingBox.getNorthwest()) || !mapBoundsRect.contains(boundingBox.getSoutheast())))
 			{
-			   anchorPointX
-			   anchorPointY
+			   var mapCenterIsNewPushpinLocationPixel = map.tryLocationToPixel(mapBoundsRect.center);
+			   var boundingBoxCenterPixel = map.tryLocationToPixel(boundingBox.center);
+			
+			   var horizontalTranslationOfCenter =  mapCenterIsNewPushpinLocationPixel.x - boundingBoxCenterPixel.x;
+			   var verticalTranslationOfCenter = mapCenterIsNewPushpinLocationPixel.x - boundingBoxCenterPixel.y;
+			
+			   pushpinLocation = mapBoundsRect.center;
+			   
+			   anchorPointX = width / 2 + horizontalTranslationOfCenter;
+			   anchorPointY = height / 2 + verticalTranslationOfCenter;
 			}
 
             return {
@@ -112,8 +122,7 @@ var ImageOverlay;
                 height: height,
 				anchorPointX: anchorPointX,
 				anchorPointY: anchorPointY,
-				offSetX: offSetX,
-				offSetY: offSetY 
+				pushpinLocation: pushpinLocation, 
             };
         }
 
@@ -121,17 +130,13 @@ var ImageOverlay;
             var size = calculateSize();
 
             _basePushpin.setOptions({anchor : new Microsoft.Maps.Point(size.anchorPointX, size.anchorPointY)});
+			_basePushpin.setLocation(size.pushpinLocation);
 
             var elm = document.getElementById(_id);
 
             if(elm){ // IMG elem
                 elm.style.width = size.width + 'px';
-                elm.style.height = size.height + 'px';   
-
-				if (elm.parentNode) { // DIV elem
-					elm.parentNode.style.marginLeft = size.offSetX + 'px';
-					elm.parentNode.style.marginTop = size.offSetY + 'px'; 
-				}				
+                elm.style.height = size.height + 'px';   			
             }
 			
 			
